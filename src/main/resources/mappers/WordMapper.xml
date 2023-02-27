@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gcc.mapper.WordMapper">
+
+    <insert id="insertBatch">
+        INSERT INTO word (id, spell, emphasis_mean, phonetic, deleted, version, create_time,
+        update_time,create_by,update_by)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id},
+            #{item.spell},
+            #{item.emphasisMean},
+            #{item.phonetic},
+            #{item.deleted},
+            #{item.version},
+            #{item.createTime},
+            #{item.updateTime},
+            #{item.createBy},
+            #{item.updateBy})
+        </foreach>
+    </insert>
+    <!--MybatisPlus生成SQL发生在自动填充之前-->
+    <update id="updateBatch">
+        UPDATE word
+        <set>
+            <trim prefix="spell=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.spell != null and item.spell != ''">
+                        WHEN spell = #{item.spell} THEN #{item.spell}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="emphasis_mean=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.emphasisMean != null and item.emphasisMean != ''">
+                        WHEN spell = #{item.spell} THEN #{item.emphasisMean}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="phonetic=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.phonetic != null and item.phonetic != ''">
+                        WHEN spell = #{item.spell} THEN #{item.phonetic}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="version=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.version == null">
+                        WHEN spell = #{item.spell} THEN #{item.version}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="update_time=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.updateTime == null">
+                        WHEN spell = #{item.spell} THEN #{item.updateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="update_by=case" suffix="end,">
+                <foreach collection="list" item="item">
+                    <if test="item.updateBy == null">
+                        WHEN spell = #{item.spell} THEN #{item.updateBy}
+                    </if>
+                </foreach>
+            </trim>
+        </set>
+        WHERE spell IN
+        <foreach collection="list" item="item" separator="," open="(" close=")">
+            #{item.spell}
+        </foreach>
+    </update>
+    <select id="selectViewWordVoList" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id,
+        w.spell,
+        w.emphasis_mean,
+        w.phonetic,
+        wt.association,
+        wt.sign
+        FROM word w
+        LEFT JOIN (SELECT word_id,
+        sign,
+        association
+        FROM word_tag
+        WHERE app_userid = #{userid}) wt on w.id = wt.word_id
+        <where>
+            <if test="content != null and content != ''">
+                AND w.emphasis_mean LIKE CONCAT('%',#{content},'%') OR w.spell LIKE CONCAT('%',#{content},'%')
+            </if>
+        </where>
+    </select>
+    <select id="selectWordVo" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id,
+               w.spell,
+               w.emphasis_mean,
+               w.phonetic,
+               wt.association,
+               wt.sign
+        FROM word w
+                 LEFT JOIN (SELECT word_id,
+                                   sign,
+                                   association
+                            FROM word_tag
+                            WHERE app_userid = #{userid}) wt on w.id = wt.word_id
+        WHERE w.id = #{wordId}
+    </select>
+    <select id="selectClientWordVoPage" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id,w.spell,w.emphasis_mean, w.phonetic, wt.association,wt.sign FROM word w
+        LEFT JOIN
+        (SELECT word_id,app_userid,sign,association FROM word_tag WHERE app_userid = ${userid}) wt on w.id = wt.word_id
+        <where>
+            <if test="content != null and content != ''">
+                w.emphasis_mean LIKE CONCAT('%',#{content},'%') OR w.spell LIKE CONCAT('%',#{content},'%')
+            </if>
+        </where>
+    </select>
+    <select id="selectWordsByTag" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id, w.spell, w.emphasis_mean, w.phonetic,wt.association, wt.sign
+        FROM word w
+        LEFT JOIN
+        (SELECT word_id, app_userid, sign, association FROM word_tag WHERE app_userid = #{userid}) wt
+        on w.id = wt.word_id
+        <where>
+            <if test="sign != null">
+                AND wt.sign=#{sign}
+            </if>
+        </where>
+    </select>
+    <select id="selectWordPageByTag" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id, w.spell, w.emphasis_mean, w.phonetic, wt.association, wt.sign
+        FROM word w
+        LEFT JOIN
+        (SELECT word_id, app_userid, sign, association FROM word_tag WHERE app_userid = ${userid}) wt
+        on w.id = wt.word_id
+        <where>
+            <if test="sign != null">
+                AND wt.sign=#{sign}
+            </if>
+            <if test="userid != null and userid != ''">
+                AND wt.app_userid=#{userid}
+            </if>
+        </where>
+    </select>
+    <select id="selectWordHasAssociation" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id, w.spell, w.emphasis_mean, w.phonetic, wt.association, wt.sign
+        FROM word w
+                 LEFT JOIN
+             (SELECT word_id, app_userid, sign, association FROM word_tag WHERE app_userid = #{userid}) wt
+             on w.id = wt.word_id
+        WHERE wt.association IS NOT NULL
+    </select>
+    <select id="selectWordHasAssociationPage" resultType="com.gcc.entity.vo.ClientWordVo">
+        SELECT w.id, w.spell, w.emphasis_mean, w.phonetic, wt.association, wt.sign
+        FROM word w
+                 LEFT JOIN
+             (SELECT word_id, app_userid, sign, association FROM word_tag WHERE app_userid = ${userid}) wt
+             on w.id = wt.word_id
+        WHERE wt.association IS NOT NULL
+    </select>
+    <select id="selectWordAddList" resultType="com.gcc.entity.vo.WordAdd">
+        SELECT id,
+               spell,
+               emphasis_mean,
+               phonetic
+        FROM word
+    </select>
+</mapper>

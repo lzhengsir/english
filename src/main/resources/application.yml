@@ -1,0 +1,64 @@
+server:
+  port: 3000
+  servlet:
+    context-path: /wordbook
+spring:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.88.200:3306/english?serverTimezone=GMT%2B8
+    username: root
+    password: 123456
+  redis:
+    # 超时时间
+    timeout: 30000
+    # 服务器地址
+    host: 192.168.88.200
+    # 服务器端口
+    port: 6379
+    # 数据库
+    database: 0
+    # 密码
+    # password: root
+    lettuce:
+      pool:
+        # 最大连接数
+        max-active: 1024
+        # 最大连接阻塞等待时间
+        max-wait: 20000
+        # 最大空闲连接
+        max-idle: 200
+        # 最小空闲连接
+        min-idle: 5
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+  mapper-locations: classpath:/mappers/*.xml
+
+word:
+  jwt:
+    expireHour: 16
+    appSecret: 312854576918320467855lzheng
+    header: Authorization
+    # typ属性表示令牌的类型，JWT令牌统一写为JWT
+    typ: JWT
+    # alg属性表示签名使用的算法，默认为HMAC SHA256（写为HS256
+    alg: HS256
+    subject: The info of english-word-book
+
+
+
+excel:
+  import:
+    columns: 3
+    columnMap:
+      0: 单词
+      1: 意思
+      2: 音标
